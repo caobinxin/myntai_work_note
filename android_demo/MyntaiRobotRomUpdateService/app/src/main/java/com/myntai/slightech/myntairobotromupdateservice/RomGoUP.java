@@ -1,19 +1,14 @@
 package com.myntai.slightech.myntairobotromupdateservice;
 
-import android.util.Log;
 import java.io.DataOutputStream;
 import java.io.IOException;
-
 
 public class RomGoUP {
 
     private final String mRECOVERY_LASTFLG = "/cache/recovery/last_flag\n";
     private final String mRECOVERY_COMMAND = "/cache/recovery/command\n";
-    private String TAG = "RomGoUP";
 
-    RomGoUP() {
-
-    }
+    RomGoUP() {}
 
     public void goUp(String updateFilePath) {
         String updating = "echo updating$path=" + updateFilePath + " > " + mRECOVERY_LASTFLG;
@@ -23,7 +18,6 @@ public class RomGoUP {
 
     private void stratGoup(String lastFlg, String command){
         try {
-            Log.i(TAG, "stratGoup: shell in");
             Process process = Runtime.getRuntime().exec("su");
             DataOutputStream dataOutputStream = new DataOutputStream(process.getOutputStream());
             dataOutputStream.writeBytes(lastFlg);

@@ -39,6 +39,7 @@ public class DownloadRom {
     }
 
     public DownloadRom(){
+
     }
 
     //检查下载状态
@@ -59,8 +60,8 @@ public class DownloadRom {
                 case DownloadManager.STATUS_SUCCESSFUL:
                     Log.i(TAG, "checkDownloadStatus: >>>下载完成");
                     //下载完成安装APK
-                    //TODO 下载完成后　回调用户是否立即升级
-                    new RomGoUP().goUp("/data/media/0/androidRomUpdate/123456.12");
+                    //TODO 自测下载完成 并执行升级
+                    //new RomGoUP().goUp("/data/media/0/androidRomUpdate/123456.12");
                     break;
                 case DownloadManager.STATUS_FAILED:
                     Log.i(TAG, "checkDownloadStatus: >>>下载失败");
