@@ -1,4 +1,4 @@
-package com.myntai.slightech.myntairobotromupdateservice;
+package com.myntai.slightech.myntairobotromupdateservice.upgrade;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -8,7 +8,7 @@ public class RomGoUP {
     private final String mRECOVERY_LASTFLG = "/cache/recovery/last_flag\n";
     private final String mRECOVERY_COMMAND = "/cache/recovery/command\n";
 
-    RomGoUP() {}
+    public RomGoUP() {}
 
     public void goUp(String updateFilePath) {
         String updating = "echo updating$path=" + updateFilePath + " > " + mRECOVERY_LASTFLG;

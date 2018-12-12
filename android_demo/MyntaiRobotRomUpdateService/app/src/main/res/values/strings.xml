@@ -3,4 +3,5 @@
     <string name="SAVE_DIR_PATH">/data/media/0/androidRomUpdate/</string>
     <string name="TEMP_OTA_LOG">temp_ota_log</string>
     <string name="OTA_MANAGEEMENT_URL">com.myntai.slightech.myntairobotromupdateservice.OtaManagementReceiver</string>
+    <string name="OTA_EXTERNAL_TRIGGER_BROADCAST_URL">com.myntai.slightech.myntairobotromupdateservice.OtaExternalTriggerReceiver</string>
 </resources>

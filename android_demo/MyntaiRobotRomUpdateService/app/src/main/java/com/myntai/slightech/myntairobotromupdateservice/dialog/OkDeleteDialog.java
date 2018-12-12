@@ -1,4 +1,4 @@
-package com.myntai.slightech.myntairobotromupdateservice;
+package com.myntai.slightech.myntairobotromupdateservice.dialog;
 
 import android.content.Context;
 import android.graphics.PixelFormat;
@@ -7,6 +7,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+
+import com.myntai.slightech.myntairobotromupdateservice.MyApplication;
+import com.myntai.slightech.myntairobotromupdateservice.R;
 
 public class OkDeleteDialog {
     final static String TAG = "OkDeleteDialog";

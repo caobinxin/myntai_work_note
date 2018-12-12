@@ -1,9 +1,11 @@
-package com.myntai.slightech.myntairobotromupdateservice;
+package com.myntai.slightech.myntairobotromupdateservice.common;
 
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
+
+import com.myntai.slightech.myntairobotromupdateservice.MyApplication;
 
 public class SystemDialogUtil {
     public static boolean requestAlertWindowPermission() {

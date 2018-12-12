@@ -1,4 +1,4 @@
-package com.myntai.slightech.myntairobotromupdateservice;
+package com.myntai.slightech.myntairobotromupdateservice.download;
 
 public class SystemRom {
     private float version;

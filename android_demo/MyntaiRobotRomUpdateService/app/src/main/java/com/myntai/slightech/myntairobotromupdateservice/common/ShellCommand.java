@@ -1,4 +1,4 @@
-package com.myntai.slightech.myntairobotromupdateservice;
+package com.myntai.slightech.myntairobotromupdateservice.common;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -74,7 +74,7 @@ public class ShellCommand {
 
     static private Process process2 = null;
     static private DataOutputStream dataOutputStream2 = null;
-    static void shellExec(String command) throws Exception{
+    public static void shellExec(String command) throws Exception{
         try {
             process2 = Runtime.getRuntime().exec("su");
             dataOutputStream2 = new DataOutputStream(process2.getOutputStream());

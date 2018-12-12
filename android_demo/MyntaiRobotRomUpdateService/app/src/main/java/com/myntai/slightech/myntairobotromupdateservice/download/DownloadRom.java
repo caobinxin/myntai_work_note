@@ -1,4 +1,4 @@
-package com.myntai.slightech.myntairobotromupdateservice;
+package com.myntai.slightech.myntairobotromupdateservice.download;
 
 import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
@@ -9,6 +9,11 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
 
+import com.myntai.slightech.myntairobotromupdateservice.MyApplication;
+import com.myntai.slightech.myntairobotromupdateservice.common.Common;
+import com.myntai.slightech.myntairobotromupdateservice.common.GoUpRomLog;
+import com.myntai.slightech.myntairobotromupdateservice.upgrade.RomGoUP;
+
 public class DownloadRom {
 
     private String TAG = "DownloadRom";
@@ -16,6 +21,7 @@ public class DownloadRom {
     private long mTaskId;
 
     private DownloadManager mDownloadManager;
+    private IDownloadStatus mIDownloadStatus;
 
     private BroadcastReceiver downloadSuccessReceiver = new BroadcastReceiver() {
         @Override
@@ -24,21 +30,24 @@ public class DownloadRom {
         }
     };
 
-    public void download(String downloadFileUri){
+    public void setListen(IDownloadStatus iDownloadStatus){
+        this.mIDownloadStatus = iDownloadStatus;
+    }
+
+    public void download(String downloadFileUri, String fname) {
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(downloadFileUri));
-        //TODO 将下载的文件保存，当下载完成的时候，将路径名传到ＯＴＡ
-        request.setDestinationInExternalPublicDir("/androidRomUpdate", "123456.12");
+        request.setDestinationInExternalPublicDir(Common.DownLoadDir, fname + ".zip");
         request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
         request.setVisibleInDownloadsUi(true);
 
-        mDownloadManager = (DownloadManager)MyApplication.getContext().getSystemService(MyApplication.getContext().DOWNLOAD_SERVICE);
+        mDownloadManager = (DownloadManager) MyApplication.getContext().getSystemService(MyApplication.getContext().DOWNLOAD_SERVICE);
 
         mTaskId = mDownloadManager.enqueue(request);
         MyApplication.getContext().registerReceiver(downloadSuccessReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
     }
 
-    public DownloadRom(){
+    public DownloadRom() {
 
     }
 
@@ -51,20 +60,29 @@ public class DownloadRom {
             int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
             switch (status) {
                 case DownloadManager.STATUS_PAUSED:
-                    Log.i(TAG, "checkDownloadStatus: >>>下载暂停");
+                    GoUpRomLog.log("DownloadRom", "checkDownloadStatus", ">>>下载暂停");
                 case DownloadManager.STATUS_PENDING:
-                    Log.i(TAG, "checkDownloadStatus: >>>下载延迟");
+                    GoUpRomLog.log("DownloadRom", "checkDownloadStatus", ">>>下载延迟");
                 case DownloadManager.STATUS_RUNNING:
-                    Log.i(TAG, "checkDownloadStatus: >>>正在下载");
+                    GoUpRomLog.log("DownloadRom", "checkDownloadStatus", ">>>正在下载");
                     break;
                 case DownloadManager.STATUS_SUCCESSFUL:
-                    Log.i(TAG, "checkDownloadStatus: >>>下载完成");
-                    //下载完成安装APK
-                    //TODO 自测下载完成 并执行升级
-                    //new RomGoUP().goUp("/data/media/0/androidRomUpdate/123456.12");
+                    GoUpRomLog.log("DownloadRom", "checkDownloadStatus", ">>>下载完成");
+                    if(null != mIDownloadStatus){
+                        mIDownloadStatus.onDownLoadSuccess("");
+                    }else {
+                        GoUpRomLog.log("DownloadRom","checkDownloadStatus","mIDownloadStatus = null 无法将成功上报");
+                    }
                     break;
                 case DownloadManager.STATUS_FAILED:
-                    Log.i(TAG, "checkDownloadStatus: >>>下载失败");
+                    GoUpRomLog.log("DownloadRom", "checkDownloadStatus", ">>>下载失败");
+                    if(null != mIDownloadStatus){
+                        mIDownloadStatus.onDownLoadFail("");
+                    }else {
+                        GoUpRomLog.log("DownloadRom","checkDownloadStatus","mIDownloadStatus = null 无法将失败上报");
+                    }
+                    break;
+                default:
                     break;
             }
         }

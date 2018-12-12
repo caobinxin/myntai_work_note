@@ -1,12 +1,18 @@
-package com.myntai.slightech.myntairobotromupdateservice;
+package com.myntai.slightech.myntairobotromupdateservice.common.network;
 
 import android.util.Log;
+
+import com.myntai.slightech.myntairobotromupdateservice.common.network.HttpCallbackListener;
+import com.myntai.slightech.myntairobotromupdateservice.download.PostData;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 
 public class HttpUtil {
     final static String TAG = "HttpUtil";
@@ -37,8 +43,11 @@ public class HttpUtil {
                         listener.onFinish(response.toString());
                     }
                 }catch (Exception e){
-                    //TODO ＨＴＴＰ请求失败
-                    listener.onError(e);
+                    if(listener != null){
+                        //TODO ＨＴＴＰ请求失败
+                        listener.onError(e);
+                    }
+
                 }finally {
                     if(connection != null){
                         connection.disconnect();
@@ -47,4 +56,20 @@ public class HttpUtil {
             }
         }).start();
     }
+
+   public static void sendOkHttpRequest(String address, okhttp3.Callback callback){
+       PostData postData = new PostData();
+       postData.setMapData(3,postData.getSystemVersion());
+       postData.setMapBasic();
+
+       OkHttpClient client = new OkHttpClient();
+       Request request = null;
+       try {
+           request = new Request.Builder().url(address).post(postData.createRequestBody())
+                   .build();
+       } catch (Exception e) {
+           e.printStackTrace();
+       }
+       client.newCall(request).enqueue(callback);
+   }
 }

@@ -1,10 +1,17 @@
-package com.myntai.slightech.myntairobotromupdateservice;
+package com.myntai.slightech.myntairobotromupdateservice.manage;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
+
+import com.myntai.slightech.myntairobotromupdateservice.MyApplication;
+import com.myntai.slightech.myntairobotromupdateservice.dialog.OkDeleteDialogService;
+import com.myntai.slightech.myntairobotromupdateservice.R;
+import com.myntai.slightech.myntairobotromupdateservice.common.GoUpRomLog;
+import com.myntai.slightech.myntairobotromupdateservice.common.ShellCommand;
+import com.myntai.slightech.myntairobotromupdateservice.common.SystemDialogUtil;
 
 import java.util.Timer;
 import java.util.TimerTask;

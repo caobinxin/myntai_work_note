@@ -1,9 +1,16 @@
-package com.myntai.slightech.myntairobotromupdateservice;
+package com.myntai.slightech.myntairobotromupdateservice.upgrade;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
+
+import com.myntai.slightech.myntairobotromupdateservice.MyApplication;
+import com.myntai.slightech.myntairobotromupdateservice.common.Common;
+import com.myntai.slightech.myntairobotromupdateservice.dialog.OkDeleteDialogService;
+import com.myntai.slightech.myntairobotromupdateservice.R;
+import com.myntai.slightech.myntairobotromupdateservice.common.GoUpRomLog;
+import com.myntai.slightech.myntairobotromupdateservice.common.ShellCommand;
+import com.myntai.slightech.myntairobotromupdateservice.common.SystemDialogUtil;
 
 public class OtaManagementReceiver extends BroadcastReceiver {
     final static String OTA_MANAGEEMENT_URL = MyApplication.getContext().getResources().getText(R.string.OTA_MANAGEEMENT_URL).toString();
@@ -23,14 +30,17 @@ public class OtaManagementReceiver extends BroadcastReceiver {
         switch (code) {
             case 0://默认什么都不做
                 break;
-            case 1://拿到　要升级包的总数　和　对应升级包的存贮路径
+            case Common.UPGRADE_CODE_DIFF_PKG_MANUAL://手动差分包升级
                 prepareGoUpEnv(intent);
                 break;
             case 2://循环升级固件
                 pollGoUpRom();
                 break;
-            case 3://全量包升级
+            case Common.UPGRADE_CODE_ALL_PKG_MANUAL://全量包升级
                 allPackageUpGoRom(intent);
+                break;
+            case Common.UPGRADE_CODE_ALL_PKG_AUTO://全自动升级全包，中间没有人为的参与
+                startAutoAllPackageUpdate(intent);
                 break;
             default:
                 break;
@@ -44,7 +54,7 @@ public class OtaManagementReceiver extends BroadcastReceiver {
     private void prepareGoUpEnv(Intent intent) {
         int otaPackagesCount = intent.getIntExtra("OTAPACKAGESCOUNT", 0);
         GoUpRomLog.log(" Differential package count:" + otaPackagesCount);
-        String command = null;
+        String command;
         if (0 == otaPackagesCount) {
             //不需要升级
         } else {
@@ -58,7 +68,7 @@ public class OtaManagementReceiver extends BroadcastReceiver {
                 try {
                     ShellCommand.shellExec(command);
                 } catch (Exception e) {
-                    GoUpRomLog.log(getClass().getSimpleName(),"prepareGoUpEnv()", "" + e);
+                    GoUpRomLog.log(getClass().getSimpleName(), "prepareGoUpEnv()", "" + e);
                 }
             }
         }
@@ -104,8 +114,20 @@ public class OtaManagementReceiver extends BroadcastReceiver {
             try {
                 ShellCommand.shellExec(command);
             } catch (Exception e) {
-                GoUpRomLog.log(getClass().getSimpleName(),"allPackageUpGoRom()", "" + e);
+                GoUpRomLog.log(getClass().getSimpleName(), "allPackageUpGoRom()", "" + e);
             }
+        }
+    }
+
+    private void startAutoAllPackageUpdate(Intent intent) {
+        String detailedAddress;
+        String allPackageUpGoRomName = intent.getStringExtra("ALLPACKAGENAME");
+        if (null == allPackageUpGoRomName) {
+            GoUpRomLog.log("allPackageUpGoRomName = null.");
+        } else {
+            detailedAddress = MyApplication.getContext().getResources().getText(R.string.SAVE_DIR_PATH).toString() + allPackageUpGoRomName;
+            GoUpRomLog.log("最终升级的目录:　" + detailedAddress);
+            new RomGoUP().goUp(detailedAddress);
         }
     }
 }
