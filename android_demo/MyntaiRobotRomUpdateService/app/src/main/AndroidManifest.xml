@@ -24,35 +24,41 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <receiver android:name=".manage.BootReceiver">
+        <receiver android:name=".Firefly3399.manage.BootReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.bootOta">
                 </action>
             </intent-filter>
         </receiver>
-        <receiver android:name=".BootUP">
+        <receiver android:name=".Firefly3399.BootUP">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED">
                 </action>
             </intent-filter>
         </receiver>
-        <receiver android:name=".upgrade.OtaManagementReceiver">
+        <receiver android:name=".Firefly3399.upgrade.OtaManagementReceiver">
             <intent-filter>
                 <action android:name="com.myntai.slightech.myntairobotromupdateservice.OtaManagementReceiver">
                 </action>
             </intent-filter>
         </receiver>
-        <receiver android:name=".download.OtaExternalTriggerReceiver">
+        <receiver android:name=".Firefly3399.download.OtaExternalTriggerReceiver">
             <intent-filter>
                 <action android:name="com.myntai.slightech.myntairobotromupdateservice.OtaExternalTriggerReceiver">
                 </action>
             </intent-filter>
         </receiver>
-        <service android:name=".dialog.OkDeleteDialogService">
+        <service android:name=".dialog.DialogService">
             <intent-filter >
                 <action android:name="com.myntai.slightech.myntairobotromupdateservice.dialogService"/>
             </intent-filter>
         </service>
+        <receiver android:name=".tx2.Cloud.Download.Tx2OtaExternalTriggerReceiver">
+            <intent-filter>
+                <action android:name="com.myntai.slightech.myntairobotromupdateservice.Tx2OtaExternalTriggerReceiver">
+                </action>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

@@ -1,27 +1,10 @@
 package com.myntai.slightech.myntairobotromupdateservice;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-
-import com.myntai.slightech.myntairobotromupdateservice.common.GoUpRomLog;
-import com.myntai.slightech.myntairobotromupdateservice.common.network.HttpCallbackListener;
-import com.myntai.slightech.myntairobotromupdateservice.common.network.HttpUtil;
-import com.myntai.slightech.myntairobotromupdateservice.common.network.MarvinCloudConfig;
-import com.myntai.slightech.myntairobotromupdateservice.download.DownloadRom;
-import com.myntai.slightech.myntairobotromupdateservice.download.JsonUtil;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import okhttp3.Call;
-import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "MainActivity";
