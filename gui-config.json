@@ -1,0 +1,20 @@
+{
+    "configs": [
+        {
+            "method": "rc4-md5",
+            "password": "slightech",
+            "remarks": "slightech",
+            "server": "rb3.gejw.cn",
+            "server_port": 443
+        },
+        {
+            "method": "rc4-md5",
+            "password": "hdS5sK",
+            "remarks": "slightech2",
+            "server": "rb3.gejw.cn",
+            "server_port": 1032
+        }
+    ],
+    "localPort": 1080,
+    "shareOverLan": false
+}
