@@ -69,6 +69,8 @@ repo sync tx2_update #同步单个项目
 <tool>
 	<makefile>https://github.com/caobinxin/makefile.git</makefile>
     <git>https://github.com/caobinxin/git.git</git>
+    <gdb>https://github.com/caobinxin/gdb.git</gdb>
+    <cmake>https://github.com/caobinxin/cmake.git</cmake>
 </tool>
 
 <os>
@@ -80,5 +82,5 @@ repo sync tx2_update #同步单个项目
 git clone https://github.com/caobinxin/c-.git; cd c-; touch readme.md; git add .; git commit -m "add readme.md"; git push
 ```
 
-
+Github 也提供了各种 `.gitignore` 模板配置文件:https://github.com/github/gitignore
 
