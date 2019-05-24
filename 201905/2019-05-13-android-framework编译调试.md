@@ -411,3 +411,8 @@ winheight src -4
 - 空格键
 
 当前窗口放大或者缩小后，gdbtui窗口不会发生变化，我们可以通过 space键强行进行刷新gdbtui窗口
+
+- 关闭信号
+
+https://blog.csdn.net/artine/article/details/80008529
+
