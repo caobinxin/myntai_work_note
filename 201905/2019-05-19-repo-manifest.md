@@ -1,4 +1,21 @@
-# 1. manifest 文件
+
+
+
+
+
+
+# 流程：
+
+1. 在github中创建一个专门的仓库（notes-manifest），用来存放manifest文件，参考标题一
+2. 用自己的repo仓库，可以在我的repo仓库基础上克隆一个，https://github.com/caobinxin/repo.git
+3. 然后就是初始化项目
+4. 修改自己的manifest配置清单
+
+资料参考：https://www.cnblogs.com/v2m_/p/7060832.html
+
+email = caobinxin@phoenixos.com
+
+# 标题一：manifest 文件
 
 原始的：
 
@@ -48,7 +65,38 @@ repo init --repo-url=https://github.com/caobinxin/repo.git --repo-branch=master 
 repo sync -j8
 
 repo sync tx2_update #同步单个项目
+
+repo start --all 分支名 #在各个项目中，初始化，最初的分支
 ```
+
+备注：
+
+**repo同步项目问题：**
+
+问题：在执行 repo init --repo-url=https://github.com/caobinxin/repo.git --repo-branch=master --no-repo-verify -u https://github.com/caobinxin/notes-manifest.git 会报错： fatal: Couldn't find remote ref refs/heads/phoenix-n 
+
+环境：公司的电脑之前就有安装过repo，同步过公司的Android代码
+
+解决方案记录在案：
+
+1. git clone https://github.com/caobinxin/repo.git
+2. cd repo;cp repo cbx_repo
+3. vim ~/.bashrc
+
+```shell
+export PATH=~/work/repo/repo:$PATH # ~/work/repo/ 执行 clone的地方
+```
+
+4. 此时不知为何，就可以了，很奇怪，由于好了，问题也就没有进一步细究
+5. 参考url:https://www.cnblogs.com/zndxall/p/9958457.html
+
+```shell
+$ which repo
+/home/colby/work/repo/repo/repo
+# 说明此时工作正常是用的新的repo，如果在工作中，我们发现 repo有问题了，那就把bashrc中的环境变量注销掉就ok了
+```
+
+
 
 # 3. 细分项目
 
@@ -83,4 +131,6 @@ git clone https://github.com/caobinxin/c-.git; cd c-; touch readme.md; git add .
 ```
 
 Github 也提供了各种 `.gitignore` 模板配置文件:https://github.com/github/gitignore
+
+
 
