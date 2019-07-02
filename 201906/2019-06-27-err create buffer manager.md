@@ -1,7 +1,5 @@
 # err: create buffer manager
 
-df -h 看u盘挂载在那？
-
 env:
 
 4.19.15 -android7 我们自己的代码。 
