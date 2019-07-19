@@ -1,0 +1,202 @@
+# android c++层中打印调用栈的方法：
+
+## 1. 答案：
+
+```c++
+#include <utils/CallStack.h>
+
+#LOG_TAG "colby"
+CallStack stack(LOG_TAG);
+```
+
+### 1.1 各个层中答应堆栈：
+
+```cpp
+1.Java中：
+Log.e(“dump_test”,Log.getStackTraceString(new Throwable()));
+ 
+2.C++中:
+ <1>.test.cpp
+  #include <utils/Log.h>
+  #include <utils/CallStack.h>
+  void dumping_callstack(){
+   android::CallStack stack;
+   //getpid()和gettid()效果一样
+   //stack.update(2,getpid());
+   //stack.update(2,gettid());
+ 
+  stack.update();
+  //输出到printf
+  stack.dump(1);
+  //输出到logcat
+  stack.log("dump_test");
+  //可以设置第2、3个参数
+  //stack.log("Dumping Stack",ANDROID_LOG_ERROR ,"123 ");
+}
+ 
+void func1(){
+  dumping_callstack();
+}
+ 
+void func2(){
+ 
+  func1();
+}
+ 
+void func3(){
+ 
+  func2();
+}
+int main(){
+  ALOGE("main_test------------------>");
+ 
+  func3();
+}
+ 
+ <2>.Android.mk
+  LOCAL_PATH := $(call my-dir)
+  include $(CLEAR_VARS)
+  LOCAL_SRC_FILES := test.cpp
+  LOCAL_MODULE_TAGS := optional
+  LOCAL_MODULE := test
+  LOCAL_SHARED_LIBRARIES += libcutils libutils
+  include $(BUILD_EXECUTABLE)
+ 
+3.C中：
+ <1>.创建callstack.cpp
+   #include <utils/CallStack.h>
+   extern "C" void dumping_callstack();
+ 
+   void dumping_callstack(){
+      android::CallStack stack;
+      stack.update();
+      stack.log(“dump_test“);
+   }
+  <2>.创建callstack.h
+      void dumping_callstack();
+  <3>.测试test.c
+      #include "callstack.h"
+ 
+      static ssize_t out_write(){
+        dumping_callstack();
+      }
+  <4>.Anroid.mk中添加到编译选项：callstack.cpp及库
+      LOCAL_SHARED_LIBRARIES := libcutils libutils
+      LOCAL_SRC_FILES := callstack.cpp
+ 
+4.Kernel中:
+#include <asm/ptrace.h>
+printk(KERN_ERR "dump_stack start: %s() %d \n",__FUNCTION__,__LINE__);  
+ 
+dump_stack();
+.......
+printk(KERN_ERR "dump_stack stop: %s() %d \n",__FUNCTION__,__LINE__);  
+根据dump stack的log位置加printk()。
+ 
+测试：
+# adb logcat | grep dump_test
+```
+
+### 1.2 add
+
+## 2. 为啥：
+
+```shell
+hp-4.19$ vim ./system/core/include/utils/CallStack.h
+
+hp-4.19$ vim ./system/core/libutils/CallStack.cpp
+```
+
+```cpp
+CallStack::CallStack() {
+}
+
+CallStack::CallStack(const char* logtag, int32_t ignoreDepth) {
+    this->update(ignoreDepth+1);
+    this->log(logtag);
+}
+
+CallStack::~CallStack() {
+}
+
+void CallStack::update(int32_t ignoreDepth, pid_t tid) {
+    mFrameLines.clear();
+
+    std::unique_ptr<Backtrace> backtrace(Backtrace::Create(BACKTRACE_CURRENT_PROCESS, tid));
+    if (!backtrace->Unwind(ignoreDepth)) {
+        ALOGW("%s: Failed to unwind callstack.", __FUNCTION__);
+    }
+    for (size_t i = 0; i < backtrace->NumFrames(); i++) {
+      mFrameLines.push_back(String8(backtrace->FormatFrameData(i).c_str()));
+    }
+}
+
+void CallStack::log(const char* logtag, android_LogPriority priority, const char* prefix) const {
+    LogPrinter printer(logtag, priority, prefix, /*ignoreBlankLines*/false);
+    print(printer);
+}
+
+void CallStack::dump(int fd, int indent, const char* prefix) const {
+    FdPrinter printer(fd, indent, prefix);
+    print(printer);
+}
+
+String8 CallStack::toString(const char* prefix) const {
+    String8 str;
+
+    String8Printer printer(&str, prefix);
+    print(printer);
+
+    return str;
+}
+
+void CallStack::print(Printer& printer) const {
+    for (size_t i = 0; i < mFrameLines.size(); i++) {
+        printer.printLine(mFrameLines[i]);
+    }
+}
+```
+
+```cpp
+class CallStack {
+public:
+    // Create an empty call stack. No-op.
+    CallStack();
+    // Create a callstack with the current thread's stack trace.
+    // Immediately dump it to logcat using the given logtag.
+    CallStack(const char* logtag, int32_t ignoreDepth=1);
+    ~CallStack();
+
+    // Reset the stack frames (same as creating an empty call stack).
+    void clear() { mFrameLines.clear(); }
+
+    // Immediately collect the stack traces for the specified thread.
+    // The default is to dump the stack of the current call.
+    void update(int32_t ignoreDepth=1, pid_t tid=BACKTRACE_CURRENT_THREAD);
+
+    // Dump a stack trace to the log using the supplied logtag.
+    void log(const char* logtag,
+             android_LogPriority priority = ANDROID_LOG_DEBUG,
+             const char* prefix = 0) const;
+
+    // Dump a stack trace to the specified file descriptor.
+    void dump(int fd, int indent = 0, const char* prefix = 0) const;
+
+    // Return a string (possibly very long) containing the complete stack trace.
+    String8 toString(const char* prefix = 0) const;
+
+    // Dump a serialized representation of the stack trace to the specified printer.
+    void print(Printer& printer) const;
+
+    // Get the count of stack frames that are in this call stack.
+    size_t size() const { return mFrameLines.size(); }
+
+private:                                                                                                                                                                                                           
+    Vector<String8> mFrameLines;
+};
+```
+
+1. 从.h中我们可以看到，　函数中是有默认参数的。　这样调用的时候，也不奇怪了。
+
+
+

@@ -250,6 +250,71 @@ private static final String WAKE_UP_INTENT = "com.android.powermanagerservice.wa
 adb shell am broadcast -a com.android.powermanagerservice.wake.up
 ```
 
+**这里重新更新一下：**
+
+1. 这里直接将　发送广播放在　wakeUp()函数中发送，范围太大。应该满足一定条件下，在发送广播。
+2. 根据后面的测试发现。当广播直接放在wakeup()中时，　当微信QQ 在拍照或者是视频语音电话的时候，会自动短wifi并且重连。　最后查问题，发现，我们在调用摄像头或者wifi时，在wakeup()函数中发送了　唤醒广播。导致wifi关闭后重连。
+3. 从这个情况中，我们也看出来，直接将 广播放置在wakeup()中是不合理的。
+
+调用顺序：　PowerManagerService.java
+
+```shell
+wakeUp ->
+	wakeUpInternal->
+		wakeUpNoUpdateLocked->
+			
+```
+
+```java
+private boolean wakeUpNoUpdateLocked(long eventTime, String reason, int reasonUid,
+            String opPackageName, int opUid) {
+        if (DEBUG_SPEW) {
+            Slog.d(TAG, "wakeUpNoUpdateLocked: eventTime=" + eventTime + ", uid=" + reasonUid);
+        }    
+
+        if (eventTime < mLastSleepTime || mWakefulness == WAKEFULNESS_AWAKE
+                || !mBootCompleted || !mSystemReady) {
+            return false;
+        }    
+
+        Trace.traceBegin(Trace.TRACE_TAG_POWER, "wakeUp");
+        try {
+            Intent wakeUpIntent = new Intent(WAKE_UP_INTENT);// 初始化
+            switch (mWakefulness) {
+                case WAKEFULNESS_ASLEEP:
+                    Slog.i(TAG, "Waking up from sleep (uid " + reasonUid +")... sendBroadcast success!");
+                    mContext.sendBroadcast(wakeUpIntent); // 发送广播
+                    break;
+                case WAKEFULNESS_DREAMING:
+                    Slog.i(TAG, "Waking up from dream (uid " + reasonUid +")... sendBroadcast success!");
+                    mContext.sendBroadcast(wakeUpIntent);　// 发送广播
+                    break;
+                case WAKEFULNESS_DOZING:
+                    Slog.i(TAG, "Waking up from dozing (uid " + reasonUid +")... sendBroadcast success!");
+                    mContext.sendBroadcast(wakeUpIntent);　// 发送广播
+                    break;
+            }    
+
+
+
+            mLastWakeTime = eventTime;
+            setWakefulnessLocked(WAKEFULNESS_AWAKE, 0);
+
+            mNotifier.onWakeUp(reason, reasonUid, opPackageName, opUid);
+            userActivityNoUpdateLocked(
+                    eventTime, PowerManager.USER_ACTIVITY_EVENT_OTHER, 0, reasonUid);
+        } finally {
+            Trace.traceEnd(Trace.TRACE_TAG_POWER);
+        }    
+        return true;                                                                                                                                                                                               
+    }
+```
+
+1. 将发送广播的位置，在往后挪挪，　
+2. 通过测试发现，这次算是找到了　合适的发送唤醒广播的点。
+
+
+
 ### 3.2 接收这个唤醒广播
 
 #### 3.2.1 接收唤醒广播
