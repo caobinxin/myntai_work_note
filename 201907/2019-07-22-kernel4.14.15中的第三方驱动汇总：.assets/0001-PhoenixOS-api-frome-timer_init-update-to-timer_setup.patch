@@ -1,0 +1,60 @@
+From f7366a18ff5ea0feb7f3e30f61a78113f1438bfc Mon Sep 17 00:00:00 2001
+From: caobinxin <caobinxin@phoenixos.com>
+Date: Fri, 26 Jul 2019 17:55:43 +0800
+Subject: [PATCH] [PhoenixOS] api: frome timer_init update to timer_setup at
+ broadcom wl dri
+
+Signed-off-by: caobinxin <caobinxin@phoenixos.com>
+---
+ .../net/wireless/broadcom/wl/src/wl/sys/wl_linux.c  | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/wl/src/wl/sys/wl_linux.c b/drivers/net/wireless/broadcom/wl/src/wl/sys/wl_linux.c
+index 1270d6da22ba..2e1701b2e83e 100644
+--- a/drivers/net/wireless/broadcom/wl/src/wl/sys/wl_linux.c
++++ b/drivers/net/wireless/broadcom/wl/src/wl/sys/wl_linux.c
+@@ -93,7 +93,8 @@ struct iw_statistics *wl_get_wireless_stats(struct net_device *dev);
+ 
+ #include <wlc_wowl.h>
+ 
+-static void wl_timer(ulong data);
++static wl_timer_t *gloable_t;
++static void wl_timer(struct timer_list *unused);
+ static void _wl_timer(wl_timer_t *t);
+ static struct net_device *wl_alloc_linux_if(wl_if_t *wlif);
+ 
+@@ -2301,9 +2302,9 @@ wl_timer_task(wl_task_t *task)
+ }
+ 
+ static void
+-wl_timer(ulong data)
++wl_timer(struct timer_list *unused)
+ {
+-	wl_timer_t *t = (wl_timer_t *)data;
++	wl_timer_t *t = (wl_timer_t *)gloable_t;
+ 
+ 	if (!WL_ALL_PASSIVE_ENAB(t->wl))
+ 		_wl_timer(t);
+@@ -2346,7 +2347,7 @@ wl_init_timer(wl_info_t *wl, void (*fn)(void *arg), void *arg, const char *tname
+ 	wl_timer_t *t;
+ 
+ 	t = (wl_timer_t*)MALLOC(wl->osh, sizeof(wl_timer_t));
+-
++	gloable_t = t;
+ 	if (t == NULL) {
+ 		WL_ERROR(("wl%d: wl_init_timer: out of memory, malloced %d bytes\n",
+ 			wl->unit, MALLOCED(wl->osh)));
+@@ -2355,9 +2356,7 @@ wl_init_timer(wl_info_t *wl, void (*fn)(void *arg), void *arg, const char *tname
+ 
+ 	bzero(t, sizeof(wl_timer_t));
+ 
+-	init_timer(&t->timer);
+-	t->timer.data = (ulong) t;
+-	t->timer.function = wl_timer;
++	timer_setup(&t->timer, wl_timer, 0);
+ 	t->wl = wl;
+ 	t->fn = fn;
+ 	t->arg = arg;
+-- 
+2.17.1
+

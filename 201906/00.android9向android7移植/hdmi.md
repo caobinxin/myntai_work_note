@@ -857,3 +857,425 @@ Documentation/media/uapi/mediactl/media-types.rst:324:       -  typically, /dev/
 这里暂时记录一下：在kernel中，我们可以根据　ioctrl　去找：SNDRV_PCM_IOCTL_INFO
 
 是可以找到的：　这里暂时不做记录了，　下周来做。
+
+### 3.1 找到注册设备节点的代码：
+
+根据SNDRV_PCM_IOCTL_INFO　这个cmd去找：
+
+```shell
+hp-4.19/kernel/sound/core$ grep -inR "SNDRV_PCM_IOCTL_INFO"
+pcm_compat.c:674:	case SNDRV_PCM_IOCTL_INFO:
+pcm_native.c:2876:	case SNDRV_PCM_IOCTL_INFO:
+```
+
+这里可以找到两个地方，　通过在这两个地方加dump_stack()发现都同时被调用到了
+
+```shell
+-----------start snd_pcm_ioctl_compat 677
+CPU: 0 PID: 1567 Comm: audioserver Not tainted 4.19.50-PhoenixOS-
+Hardware name: HP HP Pavilion x360 Convertible 14-dh0xxx/85C4, BI
+Call Trace:
+ dump_stack+0x63/0x85
+ snd_pcm_ioctl_compat+0x3ea/0x8f0 [snd_pcm]
+ __se_compat_sys_ioctl+0x370/0x1160
+ ? do_compat_writev+0x88/0xc0
+ __ia32_compat_sys_ioctl+0x17/0x20
+ do_fast_syscall_32+0x95/0x237
+ entry_SYSENTER_compat+0x6b/0x7a
+RIP: 0023:0xef3d0ec9
+Code: ff ff 89 f0 74 02 89 32 5e 5f 5d c3 8b 0c 24 c3 8b 1c 24 c3
+RSP: 002b:00000000ffac238c EFLAGS: 00000282 ORIG_RAX: 00000000000
+RAX: ffffffffffffffda RBX: 0000000000000005 RCX: 0000000081204101
+RDX: 00000000ee33ba40 RSI: 0000000000000005 RDI: 00000000ef2e394e
+RBP: 00000000ffac34f8 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
+-----------end snd_pcm_ioctl_compat 679
+
+
+
+
+---------------start snd_pcm_common_ioctl 2879
+CPU: 0 PID: 1567 Comm: audioserver Not tainted 4.19.50-PhoenixOS-
+Hardware name: HP HP Pavilion x360 Convertible 14-dh0xxx/85C4, BI
+Call Trace:
+ dump_stack+0x63/0x85
+ snd_pcm_common_ioctl+0x5fe/0xa50 [snd_pcm]
+ snd_pcm_ioctl_compat+0x415/0x8f0 [snd_pcm]
+ __se_compat_sys_ioctl+0x370/0x1160
+ ? do_compat_writev+0x88/0xc0
+ __ia32_compat_sys_ioctl+0x17/0x20
+ do_fast_syscall_32+0x95/0x237
+ entry_SYSENTER_compat+0x6b/0x7a
+RIP: 0023:0xef3d0ec9
+Code: ff ff 89 f0 74 02 89 32 5e 5f 5d c3 8b 0c 24 c3 8b 1c 24 c3
+RSP: 002b:00000000ffac238c EFLAGS: 00000282 ORIG_RAX: 00000000000
+RAX: ffffffffffffffda RBX: 0000000000000005 RCX: 0000000081204101
+RDX: 00000000ee33ba40 RSI: 0000000000000005 RDI: 00000000ef2e394e
+RBP: 00000000ffac34f8 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
+---------------end snd_pcm_common_ioctl 2881
+```
+
+根据Ｌｏｇ进一步进行分析：
+
+首先分析第一个
+
+```c
+static long snd_pcm_ioctl_compat(struct file *file, unsigned int cmd, unsigned long arg)
+{
+    struct snd_pcm_file *pcm_file;
+    struct snd_pcm_substream *substream;
+    void __user *argp = compat_ptr(arg);
+
+    pcm_file = file->private_data;
+    if (! pcm_file)
+        return -ENOTTY;
+    substream = pcm_file->substream;
+    if (! substream)
+        return -ENOTTY;
+
+    /*  
+     * When PCM is used on 32bit mode, we need to disable
+     * mmap of PCM status/control records because of the size
+     * incompatibility.
+     */
+    pcm_file->no_compat_mmap = 1;
+
+    switch (cmd) {
+    case SNDRV_PCM_IOCTL_PVERSION:
+    case SNDRV_PCM_IOCTL_INFO: // 这个就是　hal层传递过来的cmd
+
+
+printk(KERN_ERR"\n\n\n-----------start %s %d\n", __func__, __LINE__);
+dump_stack();
+printk(KERN_ERR"-----------end %s %d\n\n\n", __func__, __LINE__);
+    }
+    
+    ...
+ }
+```
+
+
+
+```c
+const struct file_operations snd_pcm_f_ops[2] = {
+    {    
+        .owner =        THIS_MODULE,
+        .write =        snd_pcm_write,
+        .write_iter =       snd_pcm_writev,
+        .open =         snd_pcm_playback_open,
+        .release =      snd_pcm_release,
+        .llseek =       no_llseek,
+        .poll =         snd_pcm_poll,
+        .unlocked_ioctl =   snd_pcm_ioctl,
+        .compat_ioctl =     snd_pcm_ioctl_compat,// 在这里被赋值了
+        .mmap =         snd_pcm_mmap,
+        .fasync =       snd_pcm_fasync,
+        .get_unmapped_area =    snd_pcm_get_unmapped_area,
+    },   
+    {    
+        .owner =        THIS_MODULE,
+        .read =         snd_pcm_read,
+        .read_iter =        snd_pcm_readv,
+        .open =         snd_pcm_capture_open,
+        .release =      snd_pcm_release,
+        .llseek =       no_llseek,
+        .poll =         snd_pcm_poll,
+        .unlocked_ioctl =   snd_pcm_ioctl,
+        .compat_ioctl =     snd_pcm_ioctl_compat,//　在这里被赋值了
+        .mmap =         snd_pcm_mmap,
+        .fasync =       snd_pcm_fasync,
+        .get_unmapped_area =    snd_pcm_get_unmapped_area,
+    }    
+};
+```
+
+```c
+static int snd_pcm_dev_register(struct snd_device *device)                                                                                                                                                         
+{
+    int cidx, err;
+    struct snd_pcm_substream *substream;
+    struct snd_pcm *pcm;
+
+    if (snd_BUG_ON(!device || !device->device_data))
+        return -ENXIO;
+    pcm = device->device_data;
+
+    mutex_lock(&register_mutex);
+    err = snd_pcm_add(pcm);
+    if (err)
+        goto unlock;
+    for (cidx = 0; cidx < 2; cidx++) {
+        int devtype = -1;
+        if (pcm->streams[cidx].substream == NULL)
+            continue;
+        switch (cidx) {
+        case SNDRV_PCM_STREAM_PLAYBACK:
+            devtype = SNDRV_DEVICE_TYPE_PCM_PLAYBACK;
+            break;
+        case SNDRV_PCM_STREAM_CAPTURE:
+            devtype = SNDRV_DEVICE_TYPE_PCM_CAPTURE;
+            break;
+        }
+        /* register pcm */
+        err = snd_register_device(devtype, pcm->card, pcm->device,
+                      &snd_pcm_f_ops[cidx], pcm,  // 在这里使用到了
+                      &pcm->streams[cidx].dev);
+        if (err < 0) { 
+            list_del_init(&pcm->list);
+            goto unlock;
+        }
+
+        for (substream = pcm->streams[cidx].substream; substream; substream = substream->next)
+            snd_pcm_timer_init(substream);
+    }    
+
+    pcm_call_notify(pcm, n_register);
+
+ unlock:
+    mutex_unlock(&register_mutex);
+    return err; 
+}
+```
+
+```c
+static int _snd_pcm_new(struct snd_card *card, const char *id, int device,
+        int playback_count, int capture_count, bool internal,
+        struct snd_pcm **rpcm)
+{
+    struct snd_pcm *pcm;
+    int err; 
+    static struct snd_device_ops ops = {
+        .dev_free = snd_pcm_dev_free,
+        .dev_register = snd_pcm_dev_register, // 这里被放置到了　ops中
+        .dev_disconnect = snd_pcm_dev_disconnect,
+    };   
+    static struct snd_device_ops internal_ops = {
+        .dev_free = snd_pcm_dev_free,
+    };   
+
+    if (snd_BUG_ON(!card))
+        return -ENXIO;
+    if (rpcm)
+        *rpcm = NULL;
+    pcm = kzalloc(sizeof(*pcm), GFP_KERNEL);
+    if (!pcm)
+        return -ENOMEM;
+    pcm->card = card;
+    pcm->device = device;
+    pcm->internal = internal;
+    mutex_init(&pcm->open_mutex);
+    init_waitqueue_head(&pcm->open_wait);
+    INIT_LIST_HEAD(&pcm->list);
+    if (id) 
+        strlcpy(pcm->id, id, sizeof(pcm->id));
+
+    err = snd_pcm_new_stream(pcm, SNDRV_PCM_STREAM_PLAYBACK,
+                 playback_count);
+    if (err < 0) 
+        goto free_pcm;
+
+    err = snd_pcm_new_stream(pcm, SNDRV_PCM_STREAM_CAPTURE, capture_count);
+    if (err < 0) 
+        goto free_pcm;
+
+    err = snd_device_new(card, SNDRV_DEV_PCM, pcm, 
+                 internal ? &internal_ops : &ops);　// 这里使用了os　snd_device_new　函数也要看看
+    if (err < 0) 
+        goto free_pcm;
+
+    if (rpcm)
+        *rpcm = pcm; 
+    return 0;                                                                                                                                                                                                      
+
+free_pcm:
+    snd_pcm_free(pcm);
+    return err; 
+}
+```
+
+```c
+/**
+ * snd_pcm_new - create a new PCM instance
+ * @card: the card instance
+ * @id: the id string
+ * @device: the device index (zero based)
+ * @playback_count: the number of substreams for playback
+ * @capture_count: the number of substreams for capture
+ * @rpcm: the pointer to store the new pcm instance
+ *
+ * Creates a new PCM instance.
+ *
+ * The pcm operators have to be set afterwards to the new instance
+ * via snd_pcm_set_ops().
+ *
+ * Return: Zero if successful, or a negative error code on failure.
+ */
+
+int snd_pcm_new(struct snd_card *card, const char *id, int device,
+        int playback_count, int capture_count, struct snd_pcm **rpcm)
+{
+    printk(KERN_ERR"colby %s %d id=%s device=%d playback_count=%d capture_count=%d", __func__, __LINE__, id, device, playback_count, capture_count);
+    
+    return _snd_pcm_new(card, id, device, playback_count, capture_count,        
+            false, rpcm);
+}
+EXPORT_SYMBOL(snd_pcm_new);
+```
+
+**snd_pcm_new 函数很重要的**
+
+------
+
+回头看看　snd_device_new函数
+
+```c
+
+// snd_device_new(card, SNDRV_DEV_PCM, pcm, internal ? &internal_ops : &ops);
+
+int snd_device_new(struct snd_card *card, enum snd_device_type type,
+           void *device_data, struct snd_device_ops *ops)                                                                                                                                                          
+{
+    struct snd_device *dev;
+    struct list_head *p; 
+
+    if (snd_BUG_ON(!card || !device_data || !ops))
+        return -ENXIO;
+    dev = kzalloc(sizeof(*dev), GFP_KERNEL); // 在这里才分配了　snd_device
+    if (!dev)
+        return -ENOMEM;
+    INIT_LIST_HEAD(&dev->list);
+    dev->card = card;
+    dev->type = type;
+    dev->state = SNDRV_DEV_BUILD;
+    dev->device_data = device_data;
+    dev->ops = ops; // 这里也仅仅是赋值，并没有调用。
+
+    /* insert the entry in an incrementally sorted list */
+    list_for_each_prev(p, &card->devices) {
+        struct snd_device *pdev = list_entry(p, struct snd_device, list);
+        if ((unsigned int)pdev->type <= (unsigned int)type)
+            break;
+    }   
+
+    list_add(&dev->list, p); 
+    return 0;
+}
+EXPORT_SYMBOL(snd_device_new);
+```
+
+
+
+-------
+
+snd_register_device函数分析：
+
+```c
+int snd_register_device(int type, struct snd_card *card, int dev,
+            const struct file_operations *f_ops,
+            void *private_data, struct device *device)
+{
+    int minor;
+    int err = 0;
+    struct snd_minor *preg;
+
+    if (snd_BUG_ON(!device))
+        return -EINVAL;
+
+    preg = kmalloc(sizeof *preg, GFP_KERNEL);
+    if (preg == NULL)
+        return -ENOMEM;
+    preg->type = type;
+    preg->card = card ? card->number : -1;
+    preg->device = dev;
+    preg->f_ops = f_ops;
+    preg->private_data = private_data;
+    preg->card_ptr = card;
+    mutex_lock(&sound_mutex);
+    minor = snd_find_free_minor(type, card, dev);
+    if (minor < 0) {
+        err = minor;
+        goto error;
+    }
+
+    preg->dev = device;
+    device->devt = MKDEV(major, minor);
+    err = device_add(device);
+    if (err < 0)
+        goto error;
+
+    snd_minors[minor] = preg;
+ error:
+    mutex_unlock(&sound_mutex);
+    if (err < 0)
+        kfree(preg);
+    return err;
+}
+EXPORT_SYMBOL(snd_register_device);
+```
+
+```c
+#ifdef CONFIG_SND_DEBUG
+void snd_pcm_debug_name(struct snd_pcm_substream *substream,
+               char *name, size_t len) 
+{
+    snprintf(name, len, "pcmC%dD%d%c:%d",
+         substream->pcm->card->number,
+         substream->pcm->device,
+         substream->stream ? 'c' : 'p', 
+         substream->number);
+}                                                                                                                                                                                                                  
+EXPORT_SYMBOL(snd_pcm_debug_name);
+#endif
+```
+
+
+
+
+
+
+
+修改：
+
+```c
+int snd_pcm_new_stream(struct snd_pcm *pcm, int stream, int substream_count)
+{
+    int idx, err; 
+    struct snd_pcm_str *pstr = &pcm->streams[stream];
+    struct snd_pcm_substream *substream, *prev;
+
+#if IS_ENABLED(CONFIG_SND_PCM_OSS)
+    mutex_init(&pstr->oss.setup_mutex);
+#endif
+    pstr->stream = stream;
+    pstr->pcm = pcm; 
+    pstr->substream_count = substream_count;
+    if (!substream_count)
+        return 0;                                                                                                                                                                                                  
+
+    snd_device_initialize(&pstr->dev, pcm->card);
+    pstr->dev.groups = pcm_dev_attr_groups;
+    printk(KERN_ERR"colby %s %d  \n", __func__, __LINE__);
+    if( (pcm->device) >= 10){ 
+        dev_set_name(&pstr->dev, "pcmC%iD%i%c", pcm->card->number, pcm->device,
+                stream == SNDRV_PCM_STREAM_PLAYBACK ? 'p' : 'c');
+    
+    }else{
+        dev_set_name(&pstr->dev, "pcmC%iD0%i%c", pcm->card->number, pcm->device,
+             stream == SNDRV_PCM_STREAM_PLAYBACK ? 'p' : 'c');
+    }
+    
+
+...
+}
+```
+
+通过追，发现要想　多加一个零，确实就是在这里加的。但此时　hal层会报错：failed: cannot open device '/dev/snd/pcmC0D0p': No such file or directory
+
+所以我们这里不能添加0.
+
+
+
+所以这里还是采用在hal层修改的方案。

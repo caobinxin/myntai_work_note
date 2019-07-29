@@ -1,0 +1,30 @@
+From a21b4d235943085a39db49f4cc37a2ce679ff56b Mon Sep 17 00:00:00 2001
+From: caobinxin <caobinxin@phoenixos.com>
+Date: Thu, 25 Jul 2019 17:51:28 +0800
+Subject: [PATCH] [PhoenixOS] api: frome setup_timer update to timer_setup at
+ rtl8812au
+
+Signed-off-by: caobinxin <caobinxin@phoenixos.com>
+---
+ drivers/staging/rtl8812au/include/osdep_service_linux.h | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/drivers/staging/rtl8812au/include/osdep_service_linux.h b/drivers/staging/rtl8812au/include/osdep_service_linux.h
+index 8f1bf535d3b0..3ef0fbf5c6b8 100644
+--- a/drivers/staging/rtl8812au/include/osdep_service_linux.h
++++ b/drivers/staging/rtl8812au/include/osdep_service_linux.h
+@@ -272,10 +272,7 @@ __inline static void rtw_list_delete(_list *plist)
+ 
+ __inline static void _init_timer(_timer *ptimer,_nic_hdl nic_hdl,void *pfunc,void* cntx)
+ {
+-	//setup_timer(ptimer, pfunc,(u32)cntx);
+-	ptimer->function = pfunc;
+-	ptimer->data = (unsigned long)cntx;
+-	init_timer(ptimer);
++	timer_setup(ptimer, pfunc, 0);
+ }
+ 
+ __inline static void _set_timer(_timer *ptimer,u32 delay_time)
+-- 
+2.17.1
+
