@@ -102,11 +102,52 @@ hp:  in_accel_y_raw
 
 
 
+## qq登录发送重复登录
+
+```shell
+while true; do input tap 728 1399; sleep 0.5;input tap 728 1399; sleep 0.5;done
+```
 
 
 
+## ubuntu 安装虚拟机
+
+参考链接：https://www.jianshu.com/p/3bb99a3d57c9
+
+```shell
+sudo apt-get install virtualbox
+ virtualbox
+```
 
 
 
+安装软件Genymotion
+到官方网站([https://www.genymotion.com/](https://link.jianshu.com?t=https://www.genymotion.com/))下载Genymotion
+其实接下来就是注册登录然后下载适用，Genymotion分为免费版和收费版，咱们使用免费版的就可以了。
+[https://www.genymotion.com/download/](https://link.jianshu.com?t=https://www.genymotion.com/download/)
 
+下载下来的是一个.bin 文件。
+ 咱们运行命令安装。
+
+```shell
+chmod +x 下载.bin 文件
+
+./bin文件 -d /home  // 自己设置的一个安装位置 /home
+```
+
+这俩都安装完了，应该可以运行了，打开这个安装的软件。
+这时候会报一个错：irtualbox-dkms
+
+```
+  // 运行命令
+  sudo apt-get install virtualbox-dkms 
+```
+
+
+
+## 测试拨打电话
+
+```shell
+while true; do adb shell am start -a android.intent.action.CALL tel:19155155729; sleep 68;done
+```
 
