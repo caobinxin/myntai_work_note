@@ -189,47 +189,69 @@ PING www.baidu.com (112.80.248.73): 56 data bytes
 
 
 
+### android 案例
 
+#### 1.案例一：
 
+当phoenixos 在台电x4设备上，休眠唤醒后，低概率出现， wifi没办法回连的。
 
-
-临时记录：
-
-打开　debug = true;
-
-com/android/tv/settings/connectivity/ConnectToWifiFragment.java
-
-```
-private static final String TAG = "ConnectToWifiFragment";
-private static final boolean DEBUG = true;
-```
-
-
-
-
-
-com/android/settingslib/wifi/WifiTracker.java
-
-```java
-private static final String TAG = "WifiTracker";
-    private static final boolean DBG = true;
-
-updateAccessPoints(); 更新热点
-```
-
-
-
-
-
-
+此时发现： ifconfig 中没有wlan0,
 
 ```shell
-wpa_supplicant: wlan0: CTRL-EVENT-DISCONNECTED bssid=78:44:fd:7a:66:50 reason=3 locally_generated=1
-E wpa_supplicant: WMM AC: Missing IEs
+intel_hp:/ # ifconfig
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0 
+          inet6 addr: ::1/128 Scope: Host
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:216 errors:0 dropped:0 overruns:0 frame:0 
+          TX packets:216 errors:0 dropped:0 overruns:0 carrier:0 
+          collisions:0 txqueuelen:1000 
+          RX bytes:17724 TX bytes:17724
 ```
 
-![](14wifi相关的调试.assets/2019-09-06 14-44-37 的屏幕截图.png)
+但是： ifconfig -a    中却能有 wlan0
 
-```java
-Log.e("wifi-colby-autoConnectToNetwork-",Log.getStackTraceString(new Throwable()));
+```shell
+intel_hp:/ # ifconfig -a                                                       
+wlan0     Link encap:Ethernet  HWaddr d0:c6:37:b5:c9:e9
+          inet addr:192.168.1.70  Bcast:192.168.1.255  Mask:255.255.255.0 
+          inet6 addr: fe80::d2c6:37ff:feb5:c9e9/64 Scope: Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:41071 errors:0 dropped:14 overruns:0 frame:0 
+          TX packets:35047 errors:0 dropped:0 overruns:0 carrier:0 
+          collisions:0 txqueuelen:1000 
+          RX bytes:4015635 TX bytes:9257584 
+
+sit0      Link encap:IPv6-in-IPv4  
+          NOARP  MTU:1480  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0 
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0 
+          collisions:0 txqueuelen:1000 
+          RX bytes:0 TX bytes:0 
+
+ip6tnl0   Link encap:UNSPEC  
+          NOARP  MTU:1452  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0 
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0 
+          collisions:0 txqueuelen:1000 
+          RX bytes:0 TX bytes:0 
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0 
+          inet6 addr: ::1/128 Scope: Host
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:216 errors:0 dropped:0 overruns:0 frame:0 
+          TX packets:216 errors:0 dropped:0 overruns:0 carrier:0 
+          collisions:0 txqueuelen:1000 
+          RX bytes:17724 TX bytes:17724 
+
+intel_hp:/ #
 ```
+
+此时的操作是：
+
+```shell
+ifconfig wlan0 up # 这样android 层就可以链接网络了
+```
+
