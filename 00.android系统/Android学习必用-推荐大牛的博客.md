@@ -79,3 +79,17 @@
 ​     MrSimp1e(各种原创内容较新)：<http://blog.csdn.net/bboyfeiyu?viewmode=contents>
 
 Sean_帅恩（studio的讲解）：<http://blog.csdn.net/yy1300326388?viewmode=contents>
+
+
+
+
+
+
+
+这个人，也很牛逼啊
+
+http://www.360doc.com/userhome.aspx?userid=18578054&cid=3
+
+
+
+http://blog.sina.com.cn/s/blog_89f592f5010132qy.html
