@@ -12,7 +12,7 @@
 
 kernel 版本为： 4.19.50
 
-```c
+```diff
 From 1915532282393b1105fe407011fc632c4d566a35 Mon Sep 17 00:00:00 2001
 From: "he, bo" <bo.he@intel.com>
 Date: Sat, 6 Jul 2019 08:55:50 +0800
