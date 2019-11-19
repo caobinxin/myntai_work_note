@@ -115,6 +115,8 @@ make: *** [ninja_wrapper] Error 1
 hp-4.19/device$ vim generic/common/BoardConfig.mk +15
 
 ```makefile
+#hp-4.19/device$ vim generic/common/BoardConfig.mk +15
+
 ifeq ($(TARGET_PRODUCT),android_x86_64)
 # 64bit 1900M
 BOARD_SYSTEMIMAGE_PARTITION_SIZE = $(if $(MKSQUASHFS),0,1992294400)                                                                                                                                                
@@ -128,6 +130,7 @@ endif
 修改为：
 
 ```makefile
+#hp-4.19/device$ vim generic/common/BoardConfig.mk +15
 ifeq ($(TARGET_PRODUCT),android_x86_64)
 # 64bit 2000M                                                                                                                                                                                                      
 BOARD_SYSTEMIMAGE_PARTITION_SIZE = $(if $(MKSQUASHFS),0,2097152000)
