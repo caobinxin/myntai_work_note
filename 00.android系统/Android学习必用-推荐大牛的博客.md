@@ -100,6 +100,26 @@ http://gityuan.com/
 
 
 
+系统死机
+
+https://blog.csdn.net/pashanhu6402/article/details/79611307
+
+
+
+
+
+Android 干货，强烈推荐
+
+https://mp.weixin.qq.com/s/zOTO6z7bvHGhN0lhTMvR8w
+
+
+
+https://www.jianshu.com/u/ea1bd4a0705b
+
+
+
+
+
 
 
 ```mermaid
